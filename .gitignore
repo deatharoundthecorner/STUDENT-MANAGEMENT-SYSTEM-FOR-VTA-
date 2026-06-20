@@ -1,0 +1,21 @@
+# Python Virtual Environment
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyInstaller / Build outputs
+build/
+dist/
+*.spec
+
+# Local application database & assets
+student_records.db
+test_student_records.db
+student_photos/
+backups/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+desktop.ini
