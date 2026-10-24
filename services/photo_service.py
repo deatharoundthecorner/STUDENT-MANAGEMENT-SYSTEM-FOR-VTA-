@@ -4,17 +4,17 @@ import shutil
 import time
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
+from services.audit_service import AuditService
 
 class PhotoService:
     def __init__(self):
-        import sys
-        if getattr(sys, 'frozen', False):
-            self.base_dir = Path(sys.executable).parent
-        else:
-            self.base_dir = Path(__file__).resolve().parent.parent
+        from utils.paths import get_paths
+        self.install_dir, self.writable_dir = get_paths()
+        self.base_dir = self.writable_dir
         self.photos_dir = self.base_dir / "student_photos"
         self.assets_dir = self.base_dir / "assets"
         self.default_avatar_path = self.assets_dir / "default_avatar.png"
+        self.audit = AuditService()
         
         # Ensure directories exist
         self.photos_dir.mkdir(parents=True, exist_ok=True)
@@ -63,7 +63,9 @@ class PhotoService:
         shutil.copy2(source_path, target_path)
 
         # Return relative path to app root so it is portable
-        return f"student_photos/{new_filename}"
+        relative_path = f"student_photos/{new_filename}"
+        self.audit.log_event("photo.add", summary={"path_hash": hash(relative_path)})
+        return relative_path
 
     def delete_photo(self, relative_path: str):
         """Deletes the photo file specified by the relative path."""
@@ -76,6 +78,7 @@ class PhotoService:
             if self.photos_dir.resolve() in full_path.resolve().parents:
                 try:
                     os.remove(full_path)
+                    self.audit.log_event("photo.remove", summary={"path_hash": hash(relative_path)})
                 except OSError as e:
                     print(f"Error deleting photo file {full_path}: {e}")
 

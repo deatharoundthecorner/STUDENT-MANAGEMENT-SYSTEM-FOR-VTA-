@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime
 from pathlib import Path
 from models.student import Student
+from services.audit_service import AuditService
 
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
@@ -12,7 +13,7 @@ from reportlab.lib import colors
 
 class ExportService:
     def __init__(self):
-        pass
+        self.audit = AuditService()
 
     def _prepare_dataframe(self, students: list) -> pd.DataFrame:
         """Converts list of Student objects to a structured pandas DataFrame."""
@@ -42,11 +43,13 @@ class ExportService:
         """Exports list of students to a CSV file."""
         df = self._prepare_dataframe(students)
         df.to_csv(target_path_str, index=False)
+        self.audit.log_event("export.csv", summary={"record_count": len(students)})
 
     def export_to_excel(self, students: list, target_path_str: str):
         """Exports list of students to an Excel (.xlsx) file."""
         df = self._prepare_dataframe(students)
         df.to_excel(target_path_str, index=False)
+        self.audit.log_event("export.xlsx", summary={"record_count": len(students)})
 
     def export_all_to_pdf(self, students: list, target_path_str: str):
         """Generates a landscape A4 PDF report with all student records."""
@@ -152,6 +155,7 @@ class ExportService:
         
         story.append(student_table)
         doc.build(story)
+        self.audit.log_event("export.pdf", summary={"record_count": len(students)})
 
     def export_profile_to_pdf(self, student: Student, photo_absolute_path: str, target_path_str: str):
         """Generates a detailed single-page Student Profile PDF report."""

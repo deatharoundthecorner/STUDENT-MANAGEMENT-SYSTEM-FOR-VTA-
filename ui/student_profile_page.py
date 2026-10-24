@@ -31,12 +31,7 @@ class StudentProfilePage(QWidget):
         header_layout = QHBoxLayout()
         back_btn = QPushButton(" Back to Students")
         back_btn.setCursor(Qt.PointingHandCursor)
-        back_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #E2E8F0; color: #475569; border: 1px solid #CBD5E1; border-radius: 6px; padding: 8px 16px; font-weight: bold;
-            }
-            QPushButton:hover { background-color: #CBD5E1; }
-        """)
+        back_btn.setProperty("class", "SecondaryButton")
         back_btn.clicked.connect(self.back_requested.emit)
         header_layout.addWidget(back_btn)
         
@@ -44,12 +39,7 @@ class StudentProfilePage(QWidget):
         
         self.edit_btn = QPushButton(" Edit Profile")
         self.edit_btn.setCursor(Qt.PointingHandCursor)
-        self.edit_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #10B981; color: white; border: none; border-radius: 6px; padding: 8px 16px; font-weight: bold;
-            }
-            QPushButton:hover { background-color: #059669; }
-        """)
+        self.edit_btn.setProperty("class", "TableActionEdit")
         self.edit_btn.clicked.connect(self.handle_edit)
         header_layout.addWidget(self.edit_btn)
         
@@ -67,13 +57,7 @@ class StudentProfilePage(QWidget):
 
         # 2. Main Profile Card (Photo + Basic Info side-by-side)
         profile_card = QFrame()
-        profile_card.setStyleSheet("""
-            QFrame {
-                background-color: #FFFFFF;
-                border: 1px solid #E2E8F0;
-                border-radius: 12px;
-            }
-        """)
+        profile_card.setProperty("class", "DashboardCard")
         card_layout = QHBoxLayout(profile_card)
         card_layout.setContentsMargins(25, 25, 25, 25)
         card_layout.setSpacing(30)
@@ -81,7 +65,7 @@ class StudentProfilePage(QWidget):
         # Photo Left
         self.photo_label = QLabel()
         self.photo_label.setFixedSize(150, 180)
-        self.photo_label.setStyleSheet("border: 1px solid #CBD5E1; border-radius: 8px; background-color: #F8FAFC;")
+        self.photo_label.setObjectName("PhotoPreviewFrame")
         self.photo_label.setAlignment(Qt.AlignCenter)
         card_layout.addWidget(self.photo_label)
 
@@ -90,7 +74,7 @@ class StudentProfilePage(QWidget):
         info_layout.setSpacing(10)
         
         self.lbl_name = QLabel("Student Name")
-        self.lbl_name.setStyleSheet("font-size: 22px; font-weight: 800; color: #1E2A38;")
+        self.lbl_name.setProperty("class", "PageTitle")
         info_layout.addWidget(self.lbl_name)
 
         # Grid for basic details
@@ -100,19 +84,16 @@ class StudentProfilePage(QWidget):
 
         def add_info_row(grid, row, label, val_widget):
             lbl = QLabel(label)
-            lbl.setStyleSheet("font-weight: bold; color: #64748B; font-size: 12px;")
+            lbl.setProperty("class", "CardTitle")
             grid.addWidget(lbl, row, 0)
             grid.addWidget(val_widget, row, 1)
 
         self.lbl_id = QLabel("-")
-        self.lbl_id.setStyleSheet("font-size: 13px; font-weight: 600; color: #1E293B;")
+        self.lbl_id.setProperty("class", "ProfileValueStrong")
         self.lbl_year = QLabel("-")
-        self.lbl_year.setStyleSheet("font-size: 13px; color: #1E293B;")
         self.lbl_phone = QLabel("-")
-        self.lbl_phone.setStyleSheet("font-size: 13px; color: #1E293B;")
         self.lbl_address = QLabel("-")
         self.lbl_address.setWordWrap(True)
-        self.lbl_address.setStyleSheet("font-size: 13px; color: #1E293B;")
 
         add_info_row(details_grid, 0, "ID NUMBER:", self.lbl_id)
         add_info_row(details_grid, 1, "REGISTERED YEAR:", self.lbl_year)
@@ -129,19 +110,13 @@ class StudentProfilePage(QWidget):
         # Helper to create styled sections
         def create_section_box(title):
             box = QFrame()
-            box.setStyleSheet("""
-                QFrame {
-                    background-color: #FFFFFF;
-                    border: 1px solid #E2E8F0;
-                    border-radius: 8px;
-                }
-            """)
+            box.setProperty("class", "DashboardCard")
             box_layout = QVBoxLayout(box)
             box_layout.setContentsMargins(20, 20, 20, 20)
             box_layout.setSpacing(12)
             
             sec_title = QLabel(title)
-            sec_title.setStyleSheet("font-size: 14px; font-weight: bold; color: #1E2A38; border-bottom: 1px solid #F1F5F9; padding-bottom: 6px;")
+            sec_title.setProperty("class", "SectionHeader")
             box_layout.addWidget(sec_title)
             
             grid = QGridLayout()
@@ -157,7 +132,7 @@ class StudentProfilePage(QWidget):
         self.lbl_l4 = QLabel("-")
 
         def style_status_lbl(lbl):
-            lbl.setStyleSheet("font-size: 13px; font-weight: bold;")
+            lbl.setProperty("class", "StatusDefault")
         style_status_lbl(self.lbl_dropout)
         style_status_lbl(self.lbl_theory)
         style_status_lbl(self.lbl_l3)
@@ -176,8 +151,7 @@ class StudentProfilePage(QWidget):
         self.lbl_ojt_address = QLabel("-")
         self.lbl_ojt_address.setWordWrap(True)
 
-        for l in [self.lbl_ojt_place, self.lbl_ojt_phone, self.lbl_ojt_address]:
-            l.setStyleSheet("font-size: 13px; color: #1E293B;")
+        # Status styling is handled dynamically via PageTheme properties
 
         add_info_row(ojt_grid, 0, "OJT Workplace:", self.lbl_ojt_place)
         add_info_row(ojt_grid, 1, "OJT Contact Number:", self.lbl_ojt_phone)
@@ -190,8 +164,7 @@ class StudentProfilePage(QWidget):
         self.lbl_job_address = QLabel("-")
         self.lbl_job_address.setWordWrap(True)
 
-        for l in [self.lbl_job_place, self.lbl_job_address]:
-            l.setStyleSheet("font-size: 13px; color: #1E293B;")
+        # Status styling is handled dynamically via PageTheme properties
 
         add_info_row(job_grid, 0, "Current Job Place:", self.lbl_job_place)
         add_info_row(job_grid, 1, "Company Address:", self.lbl_job_address)
@@ -203,22 +176,12 @@ class StudentProfilePage(QWidget):
         
         pdf_btn = QPushButton(" Export Profile PDF")
         pdf_btn.setCursor(Qt.PointingHandCursor)
-        pdf_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #3B82F6; color: white; border: none; border-radius: 6px; padding: 10px 20px; font-weight: bold;
-            }
-            QPushButton:hover { background-color: #2563EB; }
-        """)
+        pdf_btn.setProperty("class", "PrimaryButton")
         pdf_btn.clicked.connect(self.export_pdf)
         
         print_btn = QPushButton(" Print Profile")
         print_btn.setCursor(Qt.PointingHandCursor)
-        print_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #E2E8F0; color: #475569; border: 1px solid #CBD5E1; border-radius: 6px; padding: 10px 20px; font-weight: bold;
-            }
-            QPushButton:hover { background-color: #CBD5E1; }
-        """)
+        print_btn.setProperty("class", "SecondaryButton")
         print_btn.clicked.connect(self.export_pdf) # Print redirects to generating PDF which is standard offline print workflow!
         
         actions_layout.addWidget(pdf_btn)
@@ -248,13 +211,16 @@ class StudentProfilePage(QWidget):
         def set_status_label(lbl, val):
             lbl.setText(val)
             if val == "Yes":
-                lbl.setStyleSheet("color: #10B981; font-weight: bold; font-size: 13px;") # Green
+                lbl.setProperty("class", "StatusYes")
             elif val == "No":
-                lbl.setStyleSheet("color: #EF4444; font-weight: bold; font-size: 13px;") # Red
+                lbl.setProperty("class", "StatusNo")
             elif val == "Pending":
-                lbl.setStyleSheet("color: #3B82F6; font-weight: bold; font-size: 13px;") # Blue
+                lbl.setProperty("class", "StatusPending")
             else:
-                lbl.setStyleSheet("color: #64748B; font-weight: bold; font-size: 13px;") # Muted gray
+                lbl.setProperty("class", "StatusDefault")
+            lbl.style().unpolish(lbl)
+            lbl.style().polish(lbl)
+            lbl.update()
 
         set_status_label(self.lbl_dropout, student.drop_out)
         set_status_label(self.lbl_theory, student.theory_pass)

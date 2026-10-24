@@ -2,10 +2,12 @@
 from datetime import datetime
 from database.db import DatabaseManager
 from models.student import Student
+from services.audit_service import AuditService
 
 class StudentService:
     def __init__(self):
         self.db = DatabaseManager()
+        self.audit = AuditService()
 
     def add_student(self, student: Student) -> int:
         """Inserts a new student record into database. Validates uniqueness of ID number."""
@@ -43,6 +45,7 @@ class StudentService:
         )
         last_id = self.db.execute_query(query, params)
         student.id = last_id
+        self.audit.log_event("student.create", last_id, {"id_number_hash": hash(student.id_number), "fields": ["student"]})
         return last_id
 
     def update_student(self, student: Student) -> bool:
@@ -93,12 +96,16 @@ class StudentService:
             student.id
         )
         rowcount = self.db.execute_query(query, params)
+        if rowcount > 0:
+            self.audit.log_event("student.update", student.id, {"id_number_hash": hash(student.id_number), "changed": True})
         return rowcount > 0
 
     def delete_student(self, student_id: int) -> bool:
         """Deletes a student record by ID."""
         query = "DELETE FROM students WHERE id = ?"
         rowcount = self.db.execute_query(query, (student_id,))
+        if rowcount > 0:
+            self.audit.log_event("student.delete", student_id, {"deleted": True})
         return rowcount > 0
 
     def get_student_by_id(self, student_id: int) -> Student:

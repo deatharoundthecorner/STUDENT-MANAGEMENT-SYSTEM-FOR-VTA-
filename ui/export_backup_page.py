@@ -2,11 +2,13 @@
 import os
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                              QPushButton, QFileDialog, QMessageBox, QGroupBox, 
-                             QTableWidget, QTableWidgetItem, QHeaderView, QFrame)
+                             QTableWidget, QTableWidgetItem, QHeaderView, QFrame,
+                             QSizePolicy)
 from PySide6.QtCore import Qt
 from services.student_service import StudentService
 from services.export_service import ExportService
 from services.backup_service import BackupService
+from ui.styles import polish_widget
 
 class ExportBackupPage(QWidget):
     def __init__(self):
@@ -25,21 +27,22 @@ class ExportBackupPage(QWidget):
         title_block = QVBoxLayout()
         title_block.setSpacing(4)
         title_label = QLabel("Export & System Backup")
-        title_label.setStyleSheet("font-size: 24px; font-weight: 800; color: #1E2A38;")
+        title_label.setProperty("class", "PageTitle")
         subtitle_label = QLabel("Export reports to standard formats and maintain system data backups.")
-        subtitle_label.setStyleSheet("font-size: 13px; color: #64748B;")
+        subtitle_label.setProperty("class", "PageSubtitle")
         title_block.addWidget(title_label)
         title_block.addWidget(subtitle_label)
         main_layout.addLayout(title_block)
 
         # SECTION 1: Data Exports Box
         export_group = QGroupBox("Data Exports")
+        export_group.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         export_layout = QVBoxLayout(export_group)
         export_layout.setContentsMargins(15, 20, 15, 15)
         export_layout.setSpacing(12)
 
         exp_desc = QLabel("Export all enrolled student records to spreadsheets or printer-friendly PDF summaries:")
-        exp_desc.setStyleSheet("color: #475569; font-size: 13px;")
+        exp_desc.setProperty("class", "BodyText")
         export_layout.addWidget(exp_desc)
 
         buttons_layout = QHBoxLayout()
@@ -47,32 +50,17 @@ class ExportBackupPage(QWidget):
 
         excel_btn = QPushButton("Export to Excel (.xlsx)")
         excel_btn.setCursor(Qt.PointingHandCursor)
-        excel_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #10B981; color: white; border: none; border-radius: 6px; padding: 10px 18px; font-weight: bold;
-            }
-            QPushButton:hover { background-color: #059669; }
-        """)
+        excel_btn.setProperty("class", "SuccessButton")
         excel_btn.clicked.connect(lambda: self.handle_export("excel"))
         
         csv_btn = QPushButton("Export to CSV (.csv)")
         csv_btn.setCursor(Qt.PointingHandCursor)
-        csv_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #10B981; color: white; border: none; border-radius: 6px; padding: 10px 18px; font-weight: bold;
-            }
-            QPushButton:hover { background-color: #059669; }
-        """)
+        csv_btn.setProperty("class", "SuccessButton")
         csv_btn.clicked.connect(lambda: self.handle_export("csv"))
 
         pdf_btn = QPushButton("Export Summary PDF (.pdf)")
         pdf_btn.setCursor(Qt.PointingHandCursor)
-        pdf_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #3B82F6; color: white; border: none; border-radius: 6px; padding: 10px 18px; font-weight: bold;
-            }
-            QPushButton:hover { background-color: #2563EB; }
-        """)
+        pdf_btn.setProperty("class", "PrimaryButton")
         pdf_btn.clicked.connect(lambda: self.handle_export("pdf"))
 
         buttons_layout.addWidget(excel_btn)
@@ -85,43 +73,46 @@ class ExportBackupPage(QWidget):
 
         # SECTION 2: System Backups Box
         backup_group = QGroupBox("System Backup & Restore")
+        backup_group.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         backup_layout = QVBoxLayout(backup_group)
         backup_layout.setContentsMargins(15, 20, 15, 15)
         backup_layout.setSpacing(12)
 
         backup_header = QHBoxLayout()
         back_desc = QLabel("Creates a single compressed ZIP archive containing the database records and student photos directory.")
-        back_desc.setStyleSheet("color: #475569; font-size: 13px;")
+        back_desc.setProperty("class", "BodyText")
         backup_header.addWidget(back_desc, 1)
 
         create_backup_btn = QPushButton("Create Full Backup")
         create_backup_btn.setCursor(Qt.PointingHandCursor)
-        create_backup_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #1E2A38; color: white; border: none; border-radius: 6px; padding: 10px 18px; font-weight: bold;
-            }
-            QPushButton:hover { background-color: #2D3E50; }
-        """)
+        create_backup_btn.setProperty("class", "PrimaryButton")
         create_backup_btn.clicked.connect(self.create_backup)
         backup_header.addWidget(create_backup_btn)
         backup_layout.addLayout(backup_header)
 
         # Backup History Table
         history_title = QLabel("Available Restoration Snapshots:")
-        history_title.setStyleSheet("font-weight: bold; color: #1E2A38; font-size: 12px; margin-top: 10px;")
+        history_title.setProperty("class", "SectionHeader")
         backup_layout.addWidget(history_title)
 
         self.table_backups = QTableWidget()
         self.table_backups.setColumnCount(4)
         self.table_backups.setHorizontalHeaderLabels(["Filename", "Creation Date", "File Size", "Actions"])
-        self.table_backups.horizontalHeader().setStretchLastSection(True)
         self.table_backups.verticalHeader().setVisible(False)
         self.table_backups.setAlternatingRowColors(True)
-        self.table_backups.setFixedHeight(200)
+        self.table_backups.setMinimumHeight(240)
+        self.table_backups.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        header = self.table_backups.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.Fixed)
+        self.table_backups.setColumnWidth(3, 150)
+
         backup_layout.addWidget(self.table_backups)
 
         main_layout.addWidget(backup_group)
-        main_layout.addStretch(1)
 
         # Load backup history
         self.refresh_backups()
@@ -192,13 +183,9 @@ class ExportBackupPage(QWidget):
             restore_btn.setCursor(Qt.PointingHandCursor)
             restore_btn.setProperty("path", bk["path"])
             restore_btn.setProperty("filename", bk["filename"])
-            restore_btn.setStyleSheet("""
-                QPushButton {
-                    background-color: #EF4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; font-weight: bold;
-                }
-                QPushButton:hover { background-color: #DC2626; }
-            """)
+            restore_btn.setProperty("class", "TableActionDelete")
             restore_btn.clicked.connect(self.restore_backup)
+            polish_widget(restore_btn)
             
             container = QWidget()
             lay = QHBoxLayout(container)
@@ -208,7 +195,6 @@ class ExportBackupPage(QWidget):
             
             self.table_backups.setCellWidget(row_idx, 3, container)
             
-        self.table_backups.resizeColumnToContents(0)
         self.table_backups.resizeColumnToContents(1)
         self.table_backups.resizeColumnToContents(2)
 

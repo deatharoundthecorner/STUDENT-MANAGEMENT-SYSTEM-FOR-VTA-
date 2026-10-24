@@ -1,21 +1,80 @@
-# Python Virtual Environment
+# Python Virtual Environments & Bytecode
 .venv/
-__pycache__/
+venv/
+env/
+ENV/
 *.py[cod]
 *$py.class
+**/__pycache__/
 
-# PyInstaller / Build outputs
+# PyInstaller / Build outputs & Caches
 build/
+build_qa/
+build_onefile/
 dist/
-*.spec
+dist_qa/
+installer_output/
+installer_output_qa/
+*.spec.bak
+tmp*/
 
-# Local application database & assets
+# Local Distribution & Release Artifacts
+release/
+release_qa/
+release_candidate_*/
+
+# Local Application Data, Databases & Media
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
 student_records.db
 test_student_records.db
 student_photos/
 backups/
 
-# OS-specific files
+# Runtime Logs & Scratch Directories
+logs/
+*.log
+scratch/
+staging_signed/
+msix_poc/
+qa_artifacts/
+security_reports/
+
+# Local Scan Dumps & Binary Analysis Dumps
+bandit-report.json
+pip-audit-output.txt
+docs/signing_manifest.json
+
+# Test & Runtime Data Exports
+tests/__pycache__/
+*.csv
+*.xlsx
+*.xls
+*.pdf
+
+# Stale Nested Duplicate Mirror
+student_management_system/
+
+# Local Maintenance & Scratch Scripts
+compare_duplicate_tree.ps1
+security_scan.ps1
+scripts/sign_release.ps1
+
+# Secrets, Environment & Signing Material
+*.env
+*.env.local
+*.pem
+*.pfx
+*.p12
+*.cer
+*.crt
+*.key
+
+# OS & Editor Files
 .DS_Store
 Thumbs.db
 desktop.ini
+.vscode/
+.idea/

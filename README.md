@@ -4,15 +4,9 @@ A professional, offline Windows desktop application developed in Python with **P
 
 ---
 
-## 🔑 Default Login Credentials
+## 🔐 First-run administrator setup
 
-Access to the system requires administrative credentials. The application utilizes secure local password hashing (`bcrypt`) to verify credentials.
-
-- **Username**: `admin`
-- **Password**: `admin123`
-
-> [!NOTE]
-> You can update the administrator password at any time from the **Settings** screen inside the application.
+The application does not ship with a default username or password. On first launch, create the administrator account with a strong password. Existing legacy accounts may be required to replace their password before normal access.
 
 ---
 
@@ -24,13 +18,13 @@ Follow these steps to run the application directly from source code:
 Ensure you have Python 3.9 or higher installed on your Windows machine.
 
 ### 2. Install Python Dependencies
-Open your command prompt (`cmd`) in the `student_management_system` directory and install the necessary libraries:
+Open your command prompt (`cmd`) in the canonical project root directory and install the necessary libraries:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-*Required packages include: `PySide6`, `pandas`, `openpyxl`, `reportlab`, `bcrypt`, `pillow`, and `pyinstaller`.*
+*Required packages include: `PySide6`, `pandas`, `openpyxl`, `reportlab`, `argon2-cffi`, `bcrypt` (legacy verification), `pillow`, and `pyinstaller`.*
 
 ### 3. Run the Application
 Launch the system with:
@@ -82,29 +76,62 @@ python main.py
 - Click **Restore Backup** on the target date. 
 - *Caution: Restoring will overwrite active records with the backup state. Verify the rollback prompts before accepting.*
 
+### 6. Theme Settings (Day & Night Mode)
+- Switch between **Day Mode** and **Night Mode** at any time.
+- To change themes, go to the **Settings** page -> look for the **Appearance Settings** section -> select your preferred theme in the dropdown.
+- Alternatively, click the **Theme Toggle Button** (🌙/☀️) located at the bottom of the sidebar navigation to toggle themes instantly.
+- The selected theme is stored permanently in the settings database and loaded automatically upon application restart.
+
 ---
 
-## 🛠️ Compiling to a Windows Executable (.exe)
+## 🛠️ Compiling to a Standalone Executable & Windows Installer
 
-You can compile the python application into a standalone Windows program so office staff can run it without Python installed.
+### 1. Build PyInstaller EXE
+You can compile the python application into a standalone Windows program folder so office staff can run it without Python installed.
 
-1. Open `cmd` in the `student_management_system/` directory.
-2. Double-click or run:
+1. Open `cmd` in the canonical project root directory.
+2. Run:
    ```bash
    build_exe.bat
    ```
-3. PyInstaller will compile all files, bundle PySide6, and package assets into the `dist/` directory.
-4. Locate the compiled executable inside:
+3. PyInstaller will compile only the canonical root source tree, bundle PySide6, and package assets into the `dist/` directory.
+4. Locate the compiled executable folder inside:
    `dist/StudentManagementSystem/StudentManagementSystem.exe`
+
+### 2. Build Windows Installer (Inno Setup)
+To create a real installer setup file (`StudentManagementSystem_Setup.exe`) that users can install by double-clicking:
+
+1. Ensure **Inno Setup 6** (or higher) is installed on your machine.
+2. Compile the installer script located at `installer/StudentManagementSystem.iss` using Inno Setup Compiler (`ISCC.exe`):
+   ```bash
+   ISCC.exe installer/StudentManagementSystem.iss
+   ```
+3. The final installer file will be generated inside the `installer_output/` folder:
+   `installer_output/StudentManagementSystem_Setup.exe`
+4. Running this installer will guide you through a standard Windows wizard, creating Desktop and Start Menu shortcuts.
 
 ---
 
-## 📁 System Directories
+## 📁 System Directories & App Data Storage
 
-- **`database/`**: Contains SQLite schema scripts and database engine bindings.
-- **`models/`**: Defines the object model layout for student entities.
-- **`services/`**: Code for authentication, CSV/Excel parsing, PDF compiling, file caching, and backup actions.
-- **`ui/`**: Complete set of Qt layout panels, forms, grids, and settings menus.
-- **`student_photos/`**: Repository storing cropped/copied profile photos.
-- **`backups/`**: Directory where data backup ZIPs are written.
-- **`student_records.db`**: Active SQLite database file.
+To ensure compatibility with Windows security policies (as installed applications do not have write access inside the `Program Files` directory), the application uses two separate directories at runtime:
+
+### 1. Application Installation Directory (Read-Only)
+Contains the bundled executable and binary libraries. Located at:
+- **Source run**: Project root directory
+- **Installed app run**: `C:\Program Files\Student Management System`
+
+### 2. Writable Application Data Directory
+All changing user data is stored inside the user's local AppData folder to prevent administrative permission errors:
+- **Source run**: Project root directory (for development convenience)
+- **Installed app run**: `%LOCALAPPDATA%\StudentManagementSystem\`
+
+The Writable folder contains:
+- **`student_records.db`**: The SQLite database storing student metadata and app settings.
+- **`student_photos/`**: Profile photo image files.
+- **`backups/`**: Compressed system backup ZIP archives.
+- **`assets/`**: Runtime-generated default avatar images.
+
+> [!WARNING]
+> **Data Backup Before Uninstalling:**
+> When uninstalling the application, Windows does not automatically delete your `%LOCALAPPDATA%\StudentManagementSystem` directory. However, to prevent any accidental data loss, it is highly recommended to **Create a Full Backup** from the **Export / Backup** page and copy the generated backup ZIP file to an external drive before uninstalling or modifying the software.

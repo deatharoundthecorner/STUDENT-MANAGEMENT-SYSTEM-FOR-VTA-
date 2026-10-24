@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 140" width="600" height="140">
+  <defs>
+    <linearGradient id="wmBlueGradD" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <linearGradient id="wmAccentGradD" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Left Symbol Icon -->
+  <g transform="translate(14, 14) scale(0.21875)">
+    <rect x="16" y="16" width="480" height="480" rx="108" ry="108" fill="#1E293B"/>
+    <rect x="16" y="16" width="480" height="480" rx="108" ry="108" fill="none" stroke="#475569" stroke-width="4"/>
+
+    <path d="M 124 136 C 124 118 138 104 156 104 L 276 104 C 294 104 308 118 308 136 L 308 376 C 308 394 294 408 276 408 L 156 408 C 138 408 124 394 124 376 Z" fill="url(#wmBlueGradD)"/>
+    <rect x="156" y="164" width="72" height="14" rx="7" fill="#93C5FD" opacity="0.85"/>
+    <rect x="156" y="200" width="112" height="12" rx="6" fill="#BFDBFE" opacity="0.6"/>
+
+    <path d="M 216 116 C 216 100 229 88 245 88 L 363 88 C 379 88 392 100 392 116 L 392 384 C 392 400 379 412 363 412 L 245 412 C 229 412 216 400 216 384 Z" fill="#FFFFFF"/>
+    <path d="M 216 116 C 216 100 229 88 245 88 L 363 88 C 379 88 392 100 392 116 L 392 168 L 216 168 Z" fill="#2563EB"/>
+    <circle cx="304" cy="120" r="16" fill="#FFFFFF"/>
+    <path d="M 284 156 C 284 142 292 136 304 136 C 316 136 324 142 324 156 Z" fill="#FFFFFF"/>
+
+    <rect x="246" y="196" width="116" height="14" rx="7" fill="#1E293B"/>
+    <rect x="246" y="226" width="88" height="12" rx="6" fill="#64748B"/>
+    <rect x="246" y="254" width="104" height="12" rx="6" fill="#94A3B8"/>
+
+    <circle cx="356" cy="364" r="42" fill="url(#wmAccentGradD)"/>
+    <path d="M 338 364 L 350 376 L 376 348" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Brand Typography (Light on Dark) -->
+  <text x="146" y="62" font-family="'Segoe UI', -apple-system, Roboto, sans-serif" font-size="28" font-weight="700" fill="#F8FAFC" letter-spacing="-0.5">STUDENT MANAGEMENT</text>
+  <text x="146" y="96" font-family="'Segoe UI', -apple-system, Roboto, sans-serif" font-size="22" font-weight="600" fill="#60A5FA" letter-spacing="1.5">SYSTEM</text>
+  <text x="246" y="96" font-family="'Segoe UI', -apple-system, Roboto, sans-serif" font-size="12" font-weight="500" fill="#94A3B8" letter-spacing="0.5">|  WINDOWS DESKTOP EDITION</text>
+  <rect x="146" y="110" width="420" height="2" rx="1" fill="#334155"/>
+</svg>

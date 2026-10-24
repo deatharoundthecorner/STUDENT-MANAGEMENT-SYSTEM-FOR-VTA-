@@ -5,10 +5,12 @@ from pathlib import Path
 from database.db import DatabaseManager
 from models.student import Student
 from services.student_service import StudentService
+from services.audit_service import AuditService
 
 class ImportService:
     def __init__(self):
         self.student_service = StudentService()
+        self.audit = AuditService()
 
     def is_valid_phone(self, phone: str) -> bool:
         """Validates phone-like numbers (digits, spaces, dashes, parentheses, plus)."""
@@ -177,6 +179,7 @@ class ImportService:
         except Exception as e:
             stats["errors"].append(f"Fatal import error: {str(e)}")
             
+        self.audit.log_event("import", summary={"success": stats["success"], "skipped": stats["skipped"], "failed": stats["failed"]})
         return stats
 
     def generate_template(self, target_path_str: str, file_format: str = "csv"):
