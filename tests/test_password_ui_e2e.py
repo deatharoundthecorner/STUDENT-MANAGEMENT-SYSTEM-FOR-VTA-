@@ -33,6 +33,7 @@ class TestPasswordUIEndToEnd(unittest.TestCase):
 
     def test_full_settings_password_ui_lifecycle(self):
         mock_msg = MockMessageBox()
+        orig_get_paths = utils.paths.get_paths
         orig_warning = QMessageBox.warning
         orig_info = QMessageBox.information
         QMessageBox.warning = mock_msg.warning
@@ -152,6 +153,7 @@ class TestPasswordUIEndToEnd(unittest.TestCase):
                 self.assertTrue(stored_hash.startswith('$'))
                 conn.close()
         finally:
+            utils.paths.get_paths = orig_get_paths
             QMessageBox.warning = orig_warning
             QMessageBox.information = orig_info
 

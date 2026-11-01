@@ -19,6 +19,7 @@ class TestTableActionsUIRegression(unittest.TestCase):
         cls.app = QApplication.instance() or QApplication(sys.argv)
         cls.tmp_dir = tempfile.TemporaryDirectory(prefix="sms_test_table_actions_")
         cls.tmp_path = Path(cls.tmp_dir.name)
+        cls.orig_get_paths = utils.paths.get_paths
         cls.db_path = cls.tmp_path / "test_table_actions.db"
         utils.paths.get_paths = lambda: (Path(".").resolve(), cls.tmp_path)
         DatabaseManager.set_db_path(cls.db_path)
@@ -36,6 +37,7 @@ class TestTableActionsUIRegression(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        utils.paths.get_paths = cls.orig_get_paths
         DatabaseManager.close_all_connections()
         try:
             cls.tmp_dir.cleanup()

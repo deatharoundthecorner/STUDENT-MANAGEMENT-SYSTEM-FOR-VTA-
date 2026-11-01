@@ -13,7 +13,7 @@ A high-performance, offline Windows desktop application engineered in Python wit
 
 ## 📥 Direct Windows Installer Download
 
-You do not need Python or developer tools to run the Student Management System. Download the standalone Windows installer package below (direct asset links will activate upon official GitHub Release publication):
+You do not need Python or developer tools to run the Student Management System. Download the official standalone Windows installer package directly from the verified GitHub release below:
 
 | Release Package | File Name | Platform | Cryptographic Integrity |
 | :--- | :--- | :---: | :--- |
@@ -96,27 +96,35 @@ All administrator passwords (both initial setup and subsequent changes) must sat
 - **No Surrounding Whitespace:** Passwords cannot start or end with spaces.
 - **Common Password Rejection:** Trivial or guessable passwords (e.g. `password123`, `admin123`, `12345678`) are automatically blocked.
 - **Cryptographic Storage:** Credentials are saved using Argon2id (`memory_cost=19456`, `time_cost=2`, `parallelism=1`) with unique per-user salts. Plaintext passwords are never stored, logged, or exposed in audit trails.
+- **Upgrade and Reinstallation Preservation:** Existing administrator credentials and student records are preserved across application reinstalls or updates because writable data is decoupled from the installation directory.
 
 ---
 
 ## 📂 System Directories & Data Architecture
 
-To ensure full compliance with standard Windows user permission boundaries (as standard users cannot write to `C:\Program Files`), the application strictly separates executable code from user data:
+To ensure full compliance with standard Windows user permission boundaries (standard users cannot write to `C:\Program Files`) and to protect production records during development, the application strictly separates executable code from user data:
 
 ### 1. Installation Directory (Read-Only)
 Contains the compiled binaries, dynamic Qt libraries, and static graphics:
 - **Default Location:** `C:\Program Files\Student Management System\`
 
 ### 2. Writable Application Data Directory
-All changing user records, databases, photos, and backups reside in the current user's local AppData folder:
-- **Default Location:** `%LOCALAPPDATA%\StudentManagementSystem\`
+All persistent data (student records, photos, backups, and security audit logs) resides strictly outside the project repository in the current user's local AppData folder:
+- **Installed Application (Production):** `%LOCALAPPDATA%\StudentManagementSystem\`
+- **Source / Development Mode:** `%LOCALAPPDATA%\StudentManagementSystem-Dev\`
+- **Automated QA & Custom Environment:** Configurable via the `SMS_DATA_DIR` environment variable (highest priority).
 
 | Folder / File | Purpose |
 | :--- | :--- |
 | `student_records.db` | Primary SQLite database storing student records, user accounts, application settings, and audit logs. |
 | `student_photos/` | High-resolution student photo images saved as local files. |
 | `backups/` | Compressed timestamped ZIP archives containing complete database and photo snapshots. |
+| `logs/` | Local security audit (`security.log`) and system operational logs. |
 | `assets/` | Runtime asset cache including default student avatars. |
+
+> [!IMPORTANT]
+> **Data Privacy & Local Storage Guarantee:**
+> All student personal data, identification numbers, and contact details are stored **strictly on the local computer** inside the user data directory. The software never transmits or synchronizes institutional records to external cloud endpoints, third-party services, or analytics providers.
 
 > [!TIP]
 > **Database Backup Recommendation:**
@@ -150,6 +158,7 @@ python -m unittest discover tests
 ```bash
 python main.py
 ```
+*Note: In development mode, all writable databases, photos, backups, and logs are automatically isolated in `%LOCALAPPDATA%\StudentManagementSystem-Dev\` to ensure your local production records are never modified.*
 
 ---
 

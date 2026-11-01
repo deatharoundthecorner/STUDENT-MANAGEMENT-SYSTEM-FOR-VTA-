@@ -3,7 +3,7 @@ import re
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from utils.paths import get_user_data_dir
+from utils.paths import get_paths
 
 _LOGGER_NAME = "student_management_system.security"
 _SECRET_PATTERN = re.compile(
@@ -25,7 +25,8 @@ def get_security_logger() -> logging.Logger:
     if logger.handlers:
         return logger
 
-    log_dir = Path(get_user_data_dir()) / "StudentManagementSystem" / "logs"
+    _, writable_dir = get_paths()
+    log_dir = writable_dir / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     handler = RotatingFileHandler(
         log_dir / "security.log",

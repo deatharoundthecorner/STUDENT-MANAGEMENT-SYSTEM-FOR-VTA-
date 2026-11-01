@@ -31,11 +31,16 @@ def get_paths():
         return install_dir, override_dir
     - If running as installed EXE (sys.frozen is True):
         install_dir = Path(sys.executable).parent
+        qa_marker = install_dir / "qa_data_dir.txt"
+        if qa_marker.exists():
+            custom_dir = qa_marker.read_text(encoding="utf-8").strip()
+            if custom_dir:
+                return install_dir, Path(os.path.expandvars(custom_dir)).resolve()
         writable_data_dir = get_user_data_dir() / "StudentManagementSystem"
-    - If running from source:
+    - If running from source (development mode):
         project_root = Path(__file__).resolve().parent.parent
         install_dir = project_root
-        writable_data_dir = project_root
+        writable_data_dir = get_user_data_dir() / "StudentManagementSystem-Dev"
     """
     if os.environ.get("SMS_DATA_DIR"):
         project_root = Path(__file__).resolve().parent.parent
@@ -54,7 +59,7 @@ def get_paths():
         # File is at utils/paths.py, so parent.parent is the project root
         project_root = Path(__file__).resolve().parent.parent
         install_dir = project_root
-        writable_data_dir = project_root
+        writable_data_dir = get_user_data_dir() / "StudentManagementSystem-Dev"
     return install_dir, writable_data_dir
 
 

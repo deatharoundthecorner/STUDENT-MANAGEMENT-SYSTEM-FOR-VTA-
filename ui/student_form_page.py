@@ -1,8 +1,8 @@
 # ui/student_form_page.py
 import os
 from pathlib import Path
-from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, 
-                             QLabel, QLineEdit, QComboBox, QPushButton, QMessageBox, 
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
+                             QLabel, QLineEdit, QComboBox, QPushButton, QMessageBox,
                              QGroupBox, QFormLayout, QScrollArea, QFileDialog, QFrame)
 from PySide6.QtGui import QPixmap, QCursor
 from PySide6.QtCore import Qt, Signal, QSize
@@ -22,13 +22,13 @@ class StudentFormPage(QWidget):
         self.student_service = StudentService()
         self.photo_service = PhotoService()
         self.import_service = ImportService()
-        
+
         self.is_edit_mode = False
         self.edit_student_id = None
         self.temp_photo_path = ""       # Path to newly selected photo (not saved yet)
         self.photo_removed = False       # Tracks if existing photo was deleted
         self.existing_photo_path = ""    # Path to photo stored in DB before edit
-        
+
         self.init_ui()
 
     def init_ui(self):
@@ -42,30 +42,57 @@ class StudentFormPage(QWidget):
 
         title_block = QVBoxLayout()
         title_block.setSpacing(2)
-        
+
         self.header_title = QLabel("Register Student")
         self.header_title.setProperty("class", "PageTitle")
-        
+
         self.header_subtitle = QLabel("Create a new student training dossier. Student ID Number must be unique.")
         self.header_subtitle.setProperty("class", "PageSubtitle")
-        
+
         title_block.addWidget(self.header_title)
         title_block.addWidget(self.header_subtitle)
         header_layout.addLayout(title_block, 1)
 
-        self.mode_badge = QLabel("ADD MODE")
-        self.mode_badge.setStyleSheet(
-            "background-color: #2563EB; color: #FFFFFF; font-weight: 700; "
-            "font-size: 11px; padding: 4px 10px; border-radius: 4px;"
+        # Mode Controls in Top Right
+        mode_box = QHBoxLayout()
+        mode_box.setSpacing(8)
+
+        self.mode_indicator = QLabel("EDIT MODE")
+        self.mode_indicator.setObjectName("lblModeIndicator")
+        self.mode_indicator.setStyleSheet(
+            "background-color: #059669; color: #FFFFFF; font-weight: 700; "
+            "font-size: 11px; padding: 5px 12px; border-radius: 4px;"
         )
-        header_layout.addWidget(self.mode_badge, alignment=Qt.AlignRight | Qt.AlignVCenter)
+        self.mode_indicator.setVisible(False)
+
+        self.btn_add_mode = QPushButton("ADD MODE")
+        self.btn_add_mode.setObjectName("btnAddMode")
+        self.btn_add_mode.setIcon(get_icon("plus", color="#FFFFFF", size=13))
+        self.btn_add_mode.setIconSize(QSize(13, 13))
+        self.btn_add_mode.setCursor(Qt.PointingHandCursor)
+        self.btn_add_mode.setStyleSheet(
+            "QPushButton#btnAddMode {"
+            "  background-color: #2563EB; color: #FFFFFF; font-weight: 700; "
+            "  font-size: 11px; padding: 5px 14px; border-radius: 4px; border: none;"
+            "}"
+            "QPushButton#btnAddMode:hover { background-color: #1D4ED8; }"
+            "QPushButton#btnAddMode:pressed { background-color: #1E40AF; }"
+        )
+        self.btn_add_mode.setToolTip("Active: Add Mode. Click to reset form for a new student registration.")
+        self.btn_add_mode.clicked.connect(self.handle_add_mode_clicked)
+
+        self.mode_badge = self.btn_add_mode  # Backward-compatible reference
+
+        mode_box.addWidget(self.mode_indicator, alignment=Qt.AlignRight | Qt.AlignVCenter)
+        mode_box.addWidget(self.btn_add_mode, alignment=Qt.AlignRight | Qt.AlignVCenter)
+        header_layout.addLayout(mode_box)
         root_layout.addLayout(header_layout)
 
         # 2. Scrollable Form Container
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setObjectName("FormScrollArea")
-        
+
         form_container = QWidget()
         form_container_layout = QVBoxLayout(form_container)
         form_container_layout.setContentsMargins(0, 0, 12, 0)
@@ -88,7 +115,7 @@ class StudentFormPage(QWidget):
         # Photo Preview + Photo Buttons
         photo_row = QHBoxLayout()
         photo_row.setSpacing(14)
-        
+
         self.photo_preview = QLabel()
         self.photo_preview.setFixedSize(110, 130)
         self.photo_preview.setObjectName("PhotoPreviewFrame")
@@ -400,7 +427,7 @@ class StudentFormPage(QWidget):
         self.input_ojt_address.clear()
         self.input_job_place.clear()
         self.input_job_address.clear()
-        
+
         self.cb_dropout.setCurrentIndex(0)
         self.cb_theory.setCurrentIndex(0)
         self.cb_l3.setCurrentIndex(0)
@@ -412,16 +439,94 @@ class StudentFormPage(QWidget):
         self.update_photo_preview()
         self._validate_form_inputs()
 
+    def has_unsaved_changes(self) -> bool:
+        """Determines whether the user has uncommitted changes in the form."""
+        if not self.is_edit_mode:
+            fields = [
+                self.input_id.text().strip(),
+                self.input_name.text().strip(),
+                self.input_year.text().strip(),
+                self.input_phone.text().strip(),
+                self.input_address.text().strip(),
+                self.input_ojt_place.text().strip(),
+                self.input_ojt_phone.text().strip(),
+                self.input_ojt_address.text().strip(),
+                self.input_job_place.text().strip(),
+                self.input_job_address.text().strip(),
+            ]
+            if any(fields) or self.temp_photo_path or self.photo_removed:
+                return True
+            if any(cb.currentIndex() > 0 for cb in [self.cb_dropout, self.cb_theory, self.cb_l3, self.cb_l4]):
+                return True
+            return False
+        else:
+            if not self.edit_student_id:
+                return False
+            orig = self.student_service.get_student_by_id(self.edit_student_id)
+            if not orig:
+                return False
+            return (
+                (self.input_id.text().strip() != (orig.id_number or "")) or
+                (self.input_name.text().strip() != (orig.name_of_the_student or "")) or
+                (self.input_year.text().strip() != (orig.year_of_registered or "")) or
+                (self.input_phone.text().strip() != (orig.phone_number or "")) or
+                (self.input_address.text().strip() != (orig.private_address or "")) or
+                (self.input_ojt_place.text().strip() != (orig.ojt_place or "")) or
+                (self.input_ojt_phone.text().strip() != (orig.ojt_phone_number or "")) or
+                (self.input_ojt_address.text().strip() != (orig.ojt_address or "")) or
+                (self.input_job_place.text().strip() != (orig.job_place or "")) or
+                (self.input_job_address.text().strip() != (orig.job_place_address or "")) or
+                bool(self.temp_photo_path) or
+                bool(self.photo_removed) or
+                (self.cb_dropout.currentText() != (orig.drop_out or "No")) or
+                (self.cb_theory.currentText() != (orig.theory_pass or "No")) or
+                (self.cb_l3.currentText() != (orig.nvq_l3 or "No")) or
+                (self.cb_l4.currentText() != (orig.nvq_l4 or "No"))
+            )
+
+    def handle_add_mode_clicked(self):
+        """
+        Handler for the ADD MODE button.
+        If in EDIT mode: switches to ADD mode and resets form state.
+        If in ADD mode: provides a clean reset-to-new-record action.
+        Warns if uncommitted changes exist.
+        """
+        if self.has_unsaved_changes():
+            action_desc = "switch to Add Mode" if self.is_edit_mode else "reset the form"
+            reply = QMessageBox.question(
+                self,
+                "Discard Unsaved Information?",
+                f"You have unsaved information in the form. Discard and {action_desc}?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No
+            )
+            if reply != QMessageBox.Yes:
+                return
+
+        if self.is_edit_mode:
+            self.set_add_mode()
+        else:
+            self.clear_form()
+            self.input_id.setFocus()
+
     def set_add_mode(self):
         self.is_edit_mode = False
         self.edit_student_id = None
         self.header_title.setText("Register Student")
         self.header_subtitle.setText("Create a new student training dossier. Student ID Number must be unique.")
-        self.mode_badge.setText("ADD MODE")
-        self.mode_badge.setStyleSheet(
-            "background-color: #2563EB; color: #FFFFFF; font-weight: 700; "
-            "font-size: 11px; padding: 4px 10px; border-radius: 4px;"
+        if hasattr(self, "mode_indicator"):
+            self.mode_indicator.setVisible(False)
+        self.btn_add_mode.setText("ADD MODE")
+        self.btn_add_mode.setIcon(get_icon("plus", color="#FFFFFF", size=13))
+        self.btn_add_mode.setStyleSheet(
+            "QPushButton#btnAddMode {"
+            "  background-color: #2563EB; color: #FFFFFF; font-weight: 700; "
+            "  font-size: 11px; padding: 5px 14px; border-radius: 4px; border: none;"
+            "}"
+            "QPushButton#btnAddMode:hover { background-color: #1D4ED8; }"
+            "QPushButton#btnAddMode:pressed { background-color: #1E40AF; }"
         )
+        self.btn_add_mode.setToolTip("Active: Add Mode. Click to reset form for a new student registration.")
         self.save_btn.setText("Save Student Record")
         self.input_id.setEnabled(True)
         self.clear_form()
@@ -431,13 +536,22 @@ class StudentFormPage(QWidget):
         self.edit_student_id = student_id
         self.header_title.setText("Edit Student Dossier")
         self.header_subtitle.setText("Modify existing student information. Student ID Number must remain unique.")
-        self.mode_badge.setText("EDIT MODE")
-        self.mode_badge.setStyleSheet(
-            "background-color: #059669; color: #FFFFFF; font-weight: 700; "
-            "font-size: 11px; padding: 4px 10px; border-radius: 4px;"
+        if hasattr(self, "mode_indicator"):
+            self.mode_indicator.setText("EDIT MODE")
+            self.mode_indicator.setVisible(True)
+        self.btn_add_mode.setText("+ Switch to Add Mode")
+        self.btn_add_mode.setIcon(get_icon("plus", color="#FFFFFF", size=13))
+        self.btn_add_mode.setStyleSheet(
+            "QPushButton#btnAddMode {"
+            "  background-color: #2563EB; color: #FFFFFF; font-weight: 700; "
+            "  font-size: 11px; padding: 5px 14px; border-radius: 4px; border: none;"
+            "}"
+            "QPushButton#btnAddMode:hover { background-color: #1D4ED8; }"
+            "QPushButton#btnAddMode:pressed { background-color: #1E40AF; }"
         )
+        self.btn_add_mode.setToolTip("Click to switch to Add Mode and register a new student.")
         self.save_btn.setText("Update Student Record")
-        
+
         student = self.student_service.get_student_by_id(student_id)
         if not student:
             QMessageBox.warning(self, "Record Error", "Student record was not found in the database.")
@@ -450,11 +564,11 @@ class StudentFormPage(QWidget):
         self.input_year.setText(student.year_of_registered or "")
         self.input_phone.setText(student.phone_number or "")
         self.input_address.setText(student.private_address or "")
-        
+
         self.input_ojt_place.setText(student.ojt_place or "")
         self.input_ojt_phone.setText(student.ojt_phone_number or "")
         self.input_ojt_address.setText(student.ojt_address or "")
-        
+
         self.input_job_place.setText(student.job_place or "")
         self.input_job_address.setText(student.job_place_address or "")
 
@@ -470,7 +584,7 @@ class StudentFormPage(QWidget):
         self.existing_photo_path = student.photo_path or ""
         self.temp_photo_path = ""
         self.photo_removed = False
-        
+
         self.update_photo_preview()
         self._validate_form_inputs()
 
@@ -481,11 +595,11 @@ class StudentFormPage(QWidget):
         year = self.input_year.text().strip()
         phone = self.input_phone.text().strip()
         address = self.input_address.text().strip()
-        
+
         ojt_place = self.input_ojt_place.text().strip()
         ojt_phone = self.input_ojt_phone.text().strip()
         ojt_address = self.input_ojt_address.text().strip()
-        
+
         job_place = self.input_job_place.text().strip()
         job_place_address = self.input_job_address.text().strip()
 
@@ -572,7 +686,7 @@ class StudentFormPage(QWidget):
                     if new_photo_path:
                         self.photo_service.delete_photo(new_photo_path)
                     QMessageBox.warning(self, "Error", "Failed to insert student record.")
-                    
+
         except ValueError as val_ex:
             if new_photo_path:
                 self.photo_service.delete_photo(new_photo_path)
