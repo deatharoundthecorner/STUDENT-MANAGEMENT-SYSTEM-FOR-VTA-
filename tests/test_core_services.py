@@ -643,5 +643,73 @@ class CoreServicesTestCase(unittest.TestCase):
         self.assertEqual(auth.get_login_status("nonexistent", "SomePass123!"), "invalid")
 
 
+    def test_phase19_password_management_full_lifecycle(self):
+        auth = AuthService()
+        db = DatabaseManager()
+
+        # 1. Clean DB requires setup; no default admin exists
+        self.assertTrue(auth.is_setup_required())
+        self.assertFalse(auth.authenticate("admin", "admin"))
+        self.assertFalse(auth.authenticate("admin", "Admin123!"))
+
+        # 2. Initial setup with non-admin username
+        success, msg = auth.create_admin_user("institution_lead", "InitSecret2026!#")
+        self.assertTrue(success, msg)
+        self.assertFalse(auth.is_setup_required())
+        self.assertTrue(auth.authenticate("institution_lead", "InitSecret2026!#"))
+
+        # 3. Reject password change without authenticated identity
+        fail_anon, msg_anon = auth.change_password("", "InitSecret2026!#", "NextSecret2026!#")
+        self.assertFalse(fail_anon)
+        self.assertIn("required", msg_anon.lower())
+
+        # 4. Reject incorrect current password
+        fail_badcurr, msg_badcurr = auth.change_password("institution_lead", "WrongPassword!99", "NextSecret2026!#")
+        self.assertFalse(fail_badcurr)
+        self.assertIn("incorrect", msg_badcurr.lower())
+
+        # 5. Reject weak / short new password
+        fail_short, msg_short = auth.change_password("institution_lead", "InitSecret2026!#", "short1!")
+        self.assertFalse(fail_short)
+        self.assertIn("8 characters", msg_short)
+
+        # 6. Reject common dictionary passwords
+        fail_common, msg_common = auth.change_password("institution_lead", "InitSecret2026!#", "password123")
+        self.assertFalse(fail_common)
+        self.assertIn("common", msg_common.lower())
+
+        # 7. Reject reuse of current password
+        fail_reuse, msg_reuse = auth.change_password("institution_lead", "InitSecret2026!#", "InitSecret2026!#")
+        self.assertFalse(fail_reuse)
+        self.assertIn("same as", msg_reuse.lower())
+
+        # 8. Successful password change using custom username
+        ok, msg_ok = auth.change_password("institution_lead", "InitSecret2026!#", "NextSecret2026!#")
+        self.assertTrue(ok, msg_ok)
+
+        # 9. Verify Argon2id hash storage
+        user_row = db.execute_read("SELECT password_hash FROM users WHERE username = ?", ("institution_lead",))[0]
+        self.assertTrue(auth.is_argon2_hash(user_row["password_hash"]))
+        self.assertTrue(user_row["password_hash"].startswith("$argon2id$"))
+
+        # 10. Verify old password rejected and new password accepted
+        self.assertFalse(auth.authenticate("institution_lead", "InitSecret2026!#"))
+        self.assertTrue(auth.authenticate("institution_lead", "NextSecret2026!#"))
+
+        # 11. Passwords never recorded in audit logs
+        logs = db.execute_read("SELECT action_type, summary_json, actor_username FROM audit_events")
+        for row in logs:
+            summary = str(row["summary_json"])
+            self.assertNotIn("InitSecret2026!#", summary)
+            self.assertNotIn("NextSecret2026!#", summary)
+
+        # 12. Support for 15+ character passphrases
+        ok_phrase, _ = auth.validate_password("unbroken institutional passphrase system")
+        self.assertTrue(ok_phrase)
+        ok_phrase_change, _ = auth.change_password("institution_lead", "NextSecret2026!#", "unbroken institutional passphrase system")
+        self.assertTrue(ok_phrase_change)
+        self.assertTrue(auth.authenticate("institution_lead", "unbroken institutional passphrase system"))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -35,16 +35,27 @@ class AuthService:
         count = self.db.execute_scalar("SELECT COUNT(*) FROM users")
         return count in (None, 0)
 
+    COMMON_PASSWORDS = {
+        "password", "password1", "password123", "12345678", "123456789",
+        "admin123", "administrator", "letmein123", "welcome123", "qwerty123",
+        "admin@123", "changeme", "pass1234"
+    }
+
     def validate_password(self, password: str) -> tuple:
         """Validates a password and returns (is_valid, message)."""
         if not password:
             return False, "Password is required."
         if len(password) < 8:
             return False, "Password must be at least 8 characters long."
-        if password.islower() or password.isupper():
-            return False, "Password must include both letters and numbers or symbols."
         if password.strip() != password:
             return False, "Password cannot start or end with spaces."
+        if password.lower() in self.COMMON_PASSWORDS:
+            return False, "This password is too common and easily guessable."
+        if len(password) < 15:
+            has_letter = any(c.isalpha() for c in password)
+            has_non_letter = any(not c.isalpha() for c in password)
+            if not (has_letter and has_non_letter):
+                return False, "Password must include both letters and numbers or symbols."
         return True, "Password is valid."
 
     def hash_password(self, password: str) -> str:
@@ -120,12 +131,22 @@ class AuthService:
 
     def change_password(self, username, old_password, new_password) -> tuple:
         """Changes the admin password after verifying the old one."""
+        username = (username or "").strip()
+        if not username:
+            return False, "Authenticated administrator username is required."
+        if not old_password:
+            return False, "Current password is required."
+        if not new_password:
+            return False, "New password is required."
+        if old_password == new_password:
+            return False, "New password cannot be the same as the current password."
+
         valid, message = self.validate_password(new_password)
         if not valid:
             return False, message
 
         rows = self.db.execute_read(
-            "SELECT password_hash FROM users WHERE username = ?",
+            "SELECT id, password_hash FROM users WHERE username = ?",
             (username,),
         )
         if not rows or not self.verify_password(old_password, rows[0]["password_hash"]):
@@ -135,7 +156,7 @@ class AuthService:
         updated_at = datetime.now().isoformat()
         rowcount = self._replace_hash(username, new_hash, clear_reset=True, updated_at=updated_at)
         if rowcount > 0:
-            self.audit.log_event("password.change", summary={"changed": True})
+            self.audit.log_event("password.change", actor_user_id=rows[0]["id"], actor_username=username, summary={"changed": True})
             return True, "Password changed successfully."
         return False, "Failed to update password in database."
 

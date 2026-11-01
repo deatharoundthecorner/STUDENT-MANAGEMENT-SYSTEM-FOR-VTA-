@@ -24,6 +24,11 @@ def get_bundle_dir() -> Path:
 def get_paths():
     """
     Returns (install_dir, writable_data_dir).
+    - If SMS_DATA_DIR environment variable is set:
+        override_dir = Path(os.environ["SMS_DATA_DIR"]).resolve()
+        project_root = Path(__file__).resolve().parent.parent
+        install_dir = Path(sys.executable).parent if getattr(sys, 'frozen', False) else project_root
+        return install_dir, override_dir
     - If running as installed EXE (sys.frozen is True):
         install_dir = Path(sys.executable).parent
         writable_data_dir = get_user_data_dir() / "StudentManagementSystem"
@@ -32,8 +37,18 @@ def get_paths():
         install_dir = project_root
         writable_data_dir = project_root
     """
+    if os.environ.get("SMS_DATA_DIR"):
+        project_root = Path(__file__).resolve().parent.parent
+        install_dir = Path(sys.executable).parent if getattr(sys, 'frozen', False) else project_root
+        return install_dir, Path(os.environ["SMS_DATA_DIR"]).resolve()
+
     if getattr(sys, 'frozen', False):
         install_dir = Path(sys.executable).parent
+        qa_marker = install_dir / "qa_data_dir.txt"
+        if qa_marker.exists():
+            custom_dir = qa_marker.read_text(encoding="utf-8").strip()
+            if custom_dir:
+                return install_dir, Path(os.path.expandvars(custom_dir)).resolve()
         writable_data_dir = get_user_data_dir() / "StudentManagementSystem"
     else:
         # File is at utils/paths.py, so parent.parent is the project root

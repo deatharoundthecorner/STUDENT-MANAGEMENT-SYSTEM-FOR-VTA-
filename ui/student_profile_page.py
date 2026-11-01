@@ -4,7 +4,8 @@ from pathlib import Path
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                              QPushButton, QScrollArea, QFrame, QFileDialog, QMessageBox, QGridLayout)
 from PySide6.QtGui import QPixmap, QCursor
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QSize
+from ui.icons import get_icon
 from services.student_service import StudentService
 from services.photo_service import PhotoService
 from services.export_service import ExportService
@@ -29,7 +30,9 @@ class StudentProfilePage(QWidget):
 
         # 1. Header with back button
         header_layout = QHBoxLayout()
-        back_btn = QPushButton(" Back to Students")
+        back_btn = QPushButton("Back to Students")
+        back_btn.setIcon(get_icon("chevron_left", color="#475569", size=16))
+        back_btn.setIconSize(QSize(16, 16))
         back_btn.setCursor(Qt.PointingHandCursor)
         back_btn.setProperty("class", "SecondaryButton")
         back_btn.clicked.connect(self.back_requested.emit)
@@ -37,9 +40,11 @@ class StudentProfilePage(QWidget):
         
         header_layout.addStretch(1)
         
-        self.edit_btn = QPushButton(" Edit Profile")
+        self.edit_btn = QPushButton("Edit Profile")
+        self.edit_btn.setIcon(get_icon("edit", color="#FFFFFF", size=16))
+        self.edit_btn.setIconSize(QSize(16, 16))
         self.edit_btn.setCursor(Qt.PointingHandCursor)
-        self.edit_btn.setProperty("class", "TableActionEdit")
+        self.edit_btn.setProperty("class", "PrimaryButton")
         self.edit_btn.clicked.connect(self.handle_edit)
         header_layout.addWidget(self.edit_btn)
         
@@ -174,12 +179,16 @@ class StudentProfilePage(QWidget):
         actions_layout = QHBoxLayout()
         actions_layout.setSpacing(15)
         
-        pdf_btn = QPushButton(" Export Profile PDF")
+        pdf_btn = QPushButton("Export Profile PDF")
+        pdf_btn.setIcon(get_icon("file_text", color="#FFFFFF", size=16))
+        pdf_btn.setIconSize(QSize(16, 16))
         pdf_btn.setCursor(Qt.PointingHandCursor)
         pdf_btn.setProperty("class", "PrimaryButton")
         pdf_btn.clicked.connect(self.export_pdf)
         
-        print_btn = QPushButton(" Print Profile")
+        print_btn = QPushButton("Print Dossier")
+        print_btn.setIcon(get_icon("file_text", color="#475569", size=16))
+        print_btn.setIconSize(QSize(16, 16))
         print_btn.setCursor(Qt.PointingHandCursor)
         print_btn.setProperty("class", "SecondaryButton")
         print_btn.clicked.connect(self.export_pdf) # Print redirects to generating PDF which is standard offline print workflow!

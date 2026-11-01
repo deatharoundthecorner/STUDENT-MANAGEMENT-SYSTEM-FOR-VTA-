@@ -4,7 +4,9 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QPushButton, QFileDialog, QMessageBox, QGroupBox, 
                              QTableWidget, QTableWidgetItem, QHeaderView, QFrame,
                              QSizePolicy)
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QColor
+from ui.icons import get_icon
 from services.student_service import StudentService
 from services.export_service import ExportService
 from services.backup_service import BackupService
@@ -49,18 +51,24 @@ class ExportBackupPage(QWidget):
         buttons_layout.setSpacing(15)
 
         excel_btn = QPushButton("Export to Excel (.xlsx)")
+        excel_btn.setIcon(get_icon("file_text", color="#10B981", size=16))
+        excel_btn.setIconSize(QSize(16, 16))
         excel_btn.setCursor(Qt.PointingHandCursor)
-        excel_btn.setProperty("class", "SuccessButton")
+        excel_btn.setProperty("class", "SecondaryButton")
         excel_btn.clicked.connect(lambda: self.handle_export("excel"))
         
         csv_btn = QPushButton("Export to CSV (.csv)")
+        csv_btn.setIcon(get_icon("file_text", color="#0284C7", size=16))
+        csv_btn.setIconSize(QSize(16, 16))
         csv_btn.setCursor(Qt.PointingHandCursor)
-        csv_btn.setProperty("class", "SuccessButton")
+        csv_btn.setProperty("class", "SecondaryButton")
         csv_btn.clicked.connect(lambda: self.handle_export("csv"))
 
         pdf_btn = QPushButton("Export Summary PDF (.pdf)")
+        pdf_btn.setIcon(get_icon("file_text", color="#DC2626", size=16))
+        pdf_btn.setIconSize(QSize(16, 16))
         pdf_btn.setCursor(Qt.PointingHandCursor)
-        pdf_btn.setProperty("class", "PrimaryButton")
+        pdf_btn.setProperty("class", "SecondaryButton")
         pdf_btn.clicked.connect(lambda: self.handle_export("pdf"))
 
         buttons_layout.addWidget(excel_btn)
@@ -84,6 +92,8 @@ class ExportBackupPage(QWidget):
         backup_header.addWidget(back_desc, 1)
 
         create_backup_btn = QPushButton("Create Full Backup")
+        create_backup_btn.setIcon(get_icon("export", color="#FFFFFF", size=16))
+        create_backup_btn.setIconSize(QSize(16, 16))
         create_backup_btn.setCursor(Qt.PointingHandCursor)
         create_backup_btn.setProperty("class", "PrimaryButton")
         create_backup_btn.clicked.connect(self.create_backup)
@@ -170,6 +180,16 @@ class ExportBackupPage(QWidget):
         backups = self.backup_service.list_backups()
         self.table_backups.setRowCount(0)
         
+        if not backups:
+            self.table_backups.setRowCount(1)
+            empty_item = QTableWidgetItem("No backup archives created yet. Click 'Create Full Backup' above to generate a snapshot.")
+            empty_item.setTextAlignment(Qt.AlignCenter)
+            empty_item.setForeground(QColor("#64748B"))
+            self.table_backups.setItem(0, 0, empty_item)
+            self.table_backups.setSpan(0, 0, 1, 4)
+            return
+
+        self.table_backups.clearSpans()
         for bk in backups:
             row_idx = self.table_backups.rowCount()
             self.table_backups.insertRow(row_idx)
@@ -183,7 +203,9 @@ class ExportBackupPage(QWidget):
             restore_btn.setCursor(Qt.PointingHandCursor)
             restore_btn.setProperty("path", bk["path"])
             restore_btn.setProperty("filename", bk["filename"])
-            restore_btn.setProperty("class", "TableActionDelete")
+            restore_btn.setProperty("class", "SecondaryButton")
+            restore_btn.setIcon(get_icon("export", color="#475569", size=14))
+            restore_btn.setIconSize(QSize(14, 14))
             restore_btn.clicked.connect(self.restore_backup)
             polish_widget(restore_btn)
             

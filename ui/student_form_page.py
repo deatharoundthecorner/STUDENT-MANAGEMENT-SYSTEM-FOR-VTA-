@@ -5,7 +5,8 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
                              QLabel, QLineEdit, QComboBox, QPushButton, QMessageBox, 
                              QGroupBox, QFormLayout, QScrollArea, QFileDialog, QFrame)
 from PySide6.QtGui import QPixmap, QCursor
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QSize
+from ui.icons import get_icon
 from models.student import Student
 from services.student_service import StudentService
 from services.photo_service import PhotoService
@@ -223,11 +224,11 @@ class StudentFormPage(QWidget):
         scroll.setWidget(form_container)
         root_layout.addWidget(scroll, 1)
 
-        # 3. Fixed Bottom Action Toolbar (Always Visible)
+        # 3. Fixed Bottom Action Toolbar (Solid themed card surface)
         footer_frame = QFrame()
-        footer_frame.setStyleSheet("background-color: transparent; border-top: 1px solid #CBD5E1; padding-top: 12px;")
+        footer_frame.setObjectName("FormFooterFrame")
         footer_layout = QHBoxLayout(footer_frame)
-        footer_layout.setContentsMargins(0, 0, 0, 0)
+        footer_layout.setContentsMargins(28, 10, 28, 10)
         footer_layout.setSpacing(12)
 
         self.lbl_form_hint = QLabel("* Required fields must be completed before saving.")
@@ -239,13 +240,17 @@ class StudentFormPage(QWidget):
         self.cancel_btn = QPushButton("Cancel")
         self.cancel_btn.setCursor(Qt.PointingHandCursor)
         self.cancel_btn.setProperty("class", "SecondaryButton")
-        self.cancel_btn.setMinimumWidth(110)
+        self.cancel_btn.setFixedHeight(36)
+        self.cancel_btn.setMinimumWidth(100)
         self.cancel_btn.clicked.connect(self.handle_cancel)
         footer_layout.addWidget(self.cancel_btn)
 
         self.save_btn = QPushButton("Save Student Record")
+        self.save_btn.setIcon(get_icon("check", color="#FFFFFF", size=15))
+        self.save_btn.setIconSize(QSize(15, 15))
         self.save_btn.setCursor(Qt.PointingHandCursor)
         self.save_btn.setProperty("class", "PrimaryButton")
+        self.save_btn.setFixedHeight(36)
         self.save_btn.setMinimumWidth(160)
         self.save_btn.clicked.connect(self.save_student)
         footer_layout.addWidget(self.save_btn)

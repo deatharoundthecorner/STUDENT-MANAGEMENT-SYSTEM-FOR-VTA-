@@ -3,7 +3,8 @@ import os
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                              QPushButton, QFileDialog, QMessageBox, QTableWidget, 
                              QTableWidgetItem, QHeaderView, QTextEdit, QFrame, QScrollArea)
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
+from ui.icons import get_icon
 from services.import_service import ImportService
 from services.student_service import StudentService
 
@@ -108,6 +109,8 @@ class ImportPage(QWidget):
 
         # 4. Action Row for committing import
         self.commit_btn = QPushButton("Process Data Import")
+        self.commit_btn.setIcon(get_icon("check", color="#FFFFFF", size=16))
+        self.commit_btn.setIconSize(QSize(16, 16))
         self.commit_btn.setEnabled(False)
         self.commit_btn.setCursor(Qt.PointingHandCursor)
         self.commit_btn.setProperty("class", "PrimaryButton")

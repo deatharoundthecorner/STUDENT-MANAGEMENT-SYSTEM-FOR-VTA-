@@ -1,9 +1,11 @@
 # ui/students_page.py
-from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, 
-                             QLabel, QLineEdit, QComboBox, QPushButton, QTableWidget, 
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
+                             QLabel, QLineEdit, QComboBox, QPushButton, QTableWidget,
                              QTableWidgetItem, QHeaderView, QMessageBox, QFrame,
                              QAbstractItemView)
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QSize
+from ui.icons import get_icon
+from ui.styles import polish_widget
 from PySide6.QtGui import QCursor, QColor
 from services.student_service import StudentService
 
@@ -35,18 +37,20 @@ class StudentsPage(QWidget):
 
         title_block = QVBoxLayout()
         title_block.setSpacing(2)
-        
+
         title_label = QLabel("Student Records")
         title_label.setProperty("class", "PageTitle")
-        
+
         subtitle_label = QLabel("Search, filter, inspect, and manage student enrollment and training dossiers.")
         subtitle_label.setProperty("class", "PageSubtitle")
-        
+
         title_block.addWidget(title_label)
         title_block.addWidget(subtitle_label)
         header_layout.addLayout(title_block, 1)
 
-        add_btn = QPushButton("+ Register Student")
+        add_btn = QPushButton("Register Student")
+        add_btn.setIcon(get_icon("add_student", color="#FFFFFF", size=16))
+        add_btn.setIconSize(QSize(16, 16))
         add_btn.setCursor(Qt.PointingHandCursor)
         add_btn.setProperty("class", "PrimaryButton")
         add_btn.setMinimumWidth(160)
@@ -103,7 +107,7 @@ class StudentsPage(QWidget):
             box = QVBoxLayout()
             box.setSpacing(2)
             lbl = QLabel(label_text)
-            lbl.setStyleSheet("font-size: 11px; font-weight: 600; color: #475569;")
+            lbl.setProperty("class", "FilterLabel")
             box.addWidget(lbl)
             box.addWidget(widget)
             return box
@@ -145,7 +149,7 @@ class StudentsPage(QWidget):
         action_bar.setSpacing(10)
 
         self.lbl_selected_info = QLabel("No student selected — Click any record or double-click to view dossier")
-        self.lbl_selected_info.setStyleSheet("color: #64748B; font-size: 12px; font-style: italic;")
+        self.lbl_selected_info.setProperty("class", "SelectedStudentInactive")
         action_bar.addWidget(self.lbl_selected_info, 1)
 
         self.btn_action_view = QPushButton("View Dossier")
@@ -172,18 +176,40 @@ class StudentsPage(QWidget):
         self.table = QTableWidget()
         self.table.setColumnCount(11)
         self.table.setHorizontalHeaderLabels([
-            "ID Number", "Student Name", "Year", "Phone Number", 
-            "Drop Out", "Theory Pass", "NVQ L3", "NVQ L4", 
+            "ID Number", "Student Name", "Year", "Phone Number",
+            "Drop Out", "Theory Pass", "NVQ L3", "NVQ L4",
             "OJT Place", "Job Place", "Actions"
         ])
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table.setAlternatingRowColors(True)
         self.table.verticalHeader().setVisible(False)
-        self.table.horizontalHeader().setStretchLastSection(False)
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(8, QHeaderView.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(9, QHeaderView.Stretch)
+
+        header = self.table.horizontalHeader()
+        header.setStretchLastSection(False)
+        header.setSectionResizeMode(0, QHeaderView.Interactive) # ID Number
+        header.setSectionResizeMode(1, QHeaderView.Stretch)     # Student Name
+        header.setSectionResizeMode(2, QHeaderView.Interactive) # Year
+        header.setSectionResizeMode(3, QHeaderView.Interactive) # Phone Number
+        header.setSectionResizeMode(4, QHeaderView.Interactive) # Drop Out
+        header.setSectionResizeMode(5, QHeaderView.Interactive) # Theory Pass
+        header.setSectionResizeMode(6, QHeaderView.Interactive) # NVQ L3
+        header.setSectionResizeMode(7, QHeaderView.Interactive) # NVQ L4
+        header.setSectionResizeMode(8, QHeaderView.Stretch)     # OJT Place
+        header.setSectionResizeMode(9, QHeaderView.Stretch)     # Job Place
+        header.setSectionResizeMode(10, QHeaderView.Fixed)      # Actions
+
+        self.table.verticalHeader().setDefaultSectionSize(48)
+
+        self.table.setColumnWidth(0, 110)
+        self.table.setColumnWidth(2, 60)
+        self.table.setColumnWidth(3, 115)
+        self.table.setColumnWidth(4, 85)
+        self.table.setColumnWidth(5, 95)
+        self.table.setColumnWidth(6, 80)
+        self.table.setColumnWidth(7, 80)
+        self.table.setColumnWidth(10, 230)
+
         self.table.itemSelectionChanged.connect(self.on_table_selection_changed)
         self.table.cellDoubleClicked.connect(self.on_table_double_clicked)
         main_layout.addWidget(self.table, 1)
@@ -194,22 +220,27 @@ class StudentsPage(QWidget):
         pagination_layout.setSpacing(10)
 
         self.lbl_record_count = QLabel("Showing 0 students")
-        self.lbl_record_count.setStyleSheet("color: #64748B; font-size: 12px; font-weight: 500;")
+        self.lbl_record_count.setProperty("class", "MutedText")
         pagination_layout.addWidget(self.lbl_record_count)
 
         pagination_layout.addStretch(1)
 
-        self.btn_prev_page = QPushButton("◀ Previous")
+        self.btn_prev_page = QPushButton("Previous")
+        self.btn_prev_page.setIcon(get_icon("chevron_left", color="#475569", size=14))
+        self.btn_prev_page.setIconSize(QSize(14, 14))
         self.btn_prev_page.setProperty("class", "SecondaryButton")
         self.btn_prev_page.setFixedHeight(30)
         self.btn_prev_page.clicked.connect(self.go_prev_page)
         pagination_layout.addWidget(self.btn_prev_page)
 
         self.lbl_page_info = QLabel("Page 1 of 1")
-        self.lbl_page_info.setStyleSheet("color: #475569; font-weight: 600; font-size: 12px; padding: 0 6px;")
+        self.lbl_page_info.setProperty("class", "PageInfoLabel")
         pagination_layout.addWidget(self.lbl_page_info)
 
-        self.btn_next_page = QPushButton("Next ▶")
+        self.btn_next_page = QPushButton("Next")
+        self.btn_next_page.setIcon(get_icon("chevron_right", color="#475569", size=14))
+        self.btn_next_page.setIconSize(QSize(14, 14))
+        self.btn_next_page.setLayoutDirection(Qt.RightToLeft)
         self.btn_next_page.setProperty("class", "SecondaryButton")
         self.btn_next_page.setFixedHeight(30)
         self.btn_next_page.clicked.connect(self.go_next_page)
@@ -251,7 +282,7 @@ class StudentsPage(QWidget):
         self.search_input.clear()
         self.search_input.blockSignals(False)
 
-        for cb in (self.cb_year, self.cb_dropout, self.cb_theory, self.cb_l3, 
+        for cb in (self.cb_year, self.cb_dropout, self.cb_theory, self.cb_l3,
                    self.cb_l4, self.cb_has_ojt, self.cb_has_job):
             cb.blockSignals(True)
             cb.setCurrentIndex(0)
@@ -263,22 +294,22 @@ class StudentsPage(QWidget):
     def refresh_data(self):
         """Retrieves and populates the table based on active search/filters with pagination."""
         search_text = self.search_input.text().strip()
-        
+
         filters = {}
         if self.cb_year.currentIndex() > 0:
             filters["year_of_registered"] = self.cb_year.currentText()
-            
+
         def get_status_val(cb):
             return None if cb.currentText() == "All" else cb.currentText()
-            
+
         filters["drop_out"] = get_status_val(self.cb_dropout)
         filters["theory_pass"] = get_status_val(self.cb_theory)
         filters["nvq_l3"] = get_status_val(self.cb_l3)
         filters["nvq_l4"] = get_status_val(self.cb_l4)
-        
+
         if self.cb_has_ojt.currentText() != "All":
             filters["has_ojt"] = self.cb_has_ojt.currentText()
-            
+
         if self.cb_has_job.currentText() != "All":
             filters["has_job"] = self.cb_has_job.currentText()
 
@@ -308,7 +339,7 @@ class StudentsPage(QWidget):
             self.table.setItem(row_idx, 1, QTableWidgetItem(student.name_of_the_student))
             self.table.setItem(row_idx, 2, QTableWidgetItem(student.year_of_registered or ""))
             self.table.setItem(row_idx, 3, QTableWidgetItem(student.phone_number or ""))
-            
+
             # Status items
             def create_status_item(val):
                 item = QTableWidgetItem(val or "")
@@ -320,7 +351,7 @@ class StudentsPage(QWidget):
                 elif val == "Pending":
                     item.setForeground(QColor("#2563EB"))
                 return item
-            
+
             self.table.setItem(row_idx, 4, create_status_item(student.drop_out))
             self.table.setItem(row_idx, 5, create_status_item(student.theory_pass))
             self.table.setItem(row_idx, 6, create_status_item(student.nvq_l3))
@@ -328,55 +359,85 @@ class StudentsPage(QWidget):
             self.table.setItem(row_idx, 8, QTableWidgetItem(student.ojt_place or ""))
             self.table.setItem(row_idx, 9, QTableWidgetItem(student.job_place or ""))
 
+            # Status items with theme-aware high contrast
+            from services.settings_service import SettingsService
+            is_night = (SettingsService().get_setting("theme", "day") == "night")
+
+            # Theme-aware action button vector icon tints
+            view_color = "#93C5FD" if is_night else "#1D4ED8"
+            edit_color = "#6EE7B7" if is_night else "#047857"
+            del_color = "#FCA5A5" if is_night else "#B91C1C"
+
             # Action Buttons Cell
             actions_widget = QWidget()
             actions_layout = QHBoxLayout(actions_widget)
             actions_layout.setContentsMargins(4, 2, 4, 2)
-            actions_layout.setSpacing(4)
+            actions_layout.setSpacing(6)
+            actions_layout.setAlignment(Qt.AlignCenter)
 
             btn_view = QPushButton("View")
+            btn_view.setIcon(get_icon("eye", color=view_color, active_color="#FFFFFF", size=13))
+            btn_view.setIconSize(QSize(13, 13))
             btn_view.setCursor(Qt.PointingHandCursor)
             btn_view.setProperty("student_id", student.id)
             btn_view.setProperty("class", "TableActionView")
+            btn_view.setFixedHeight(28)
+            btn_view.setToolTip(f"View complete profile for {student.name_of_the_student}")
             btn_view.clicked.connect(self.on_view_clicked)
- 
+
             btn_edit = QPushButton("Edit")
+            btn_edit.setIcon(get_icon("edit", color=edit_color, active_color="#FFFFFF", size=13))
+            btn_edit.setIconSize(QSize(13, 13))
             btn_edit.setCursor(Qt.PointingHandCursor)
             btn_edit.setProperty("student_id", student.id)
             btn_edit.setProperty("class", "TableActionEdit")
+            btn_edit.setFixedHeight(28)
+            btn_edit.setToolTip(f"Edit details for {student.name_of_the_student}")
             btn_edit.clicked.connect(self.on_edit_clicked)
- 
+
             btn_delete = QPushButton("Delete")
+            btn_delete.setIcon(get_icon("trash", color=del_color, active_color="#FFFFFF", size=13))
+            btn_delete.setIconSize(QSize(13, 13))
             btn_delete.setCursor(Qt.PointingHandCursor)
             btn_delete.setProperty("student_id", student.id)
             btn_delete.setProperty("class", "TableActionDelete")
+            btn_delete.setFixedHeight(28)
+            btn_delete.setToolTip(f"Delete student record for {student.name_of_the_student}")
             btn_delete.clicked.connect(self.on_delete_clicked)
 
             actions_layout.addWidget(btn_view)
             actions_layout.addWidget(btn_edit)
             actions_layout.addWidget(btn_delete)
-            
+
             self.table.setCellWidget(row_idx, 10, actions_widget)
+            self.table.setRowHeight(row_idx, 48)
 
         # Update Pagination Controls
         if total_count == 0:
             self.lbl_record_count.setText("No matching students found")
+            self.table.setRowCount(1)
+            empty_item = QTableWidgetItem("No student records found matching the active search or filters.")
+            empty_item.setTextAlignment(Qt.AlignCenter)
+            empty_item.setForeground(QColor("#64748B"))
+            self.table.setItem(0, 0, empty_item)
+            self.table.setSpan(0, 0, 1, 11)
         else:
+            self.table.clearSpans()
             self.lbl_record_count.setText(f"Showing {start_idx + 1}–{end_idx} of {total_count} students")
-            
+
         self.lbl_page_info.setText(f"Page {self.current_page} of {self.total_pages}")
         self.btn_prev_page.setEnabled(self.current_page > 1)
         self.btn_next_page.setEnabled(self.current_page < self.total_pages)
 
         # Column widths
         self.table.setColumnWidth(0, 110)
-        self.table.setColumnWidth(2, 70)
+        self.table.setColumnWidth(2, 65)
         self.table.setColumnWidth(3, 115)
-        self.table.setColumnWidth(4, 80)
-        self.table.setColumnWidth(5, 90)
-        self.table.setColumnWidth(6, 85)
-        self.table.setColumnWidth(7, 85)
-        self.table.setColumnWidth(10, 160)
+        self.table.setColumnWidth(4, 85)
+        self.table.setColumnWidth(5, 95)
+        self.table.setColumnWidth(6, 80)
+        self.table.setColumnWidth(7, 80)
+        self.table.setColumnWidth(10, 230)
 
     def on_table_selection_changed(self):
         selected_rows = self.table.selectionModel().selectedRows()
@@ -402,14 +463,15 @@ class StudentsPage(QWidget):
             self.lbl_selected_info.setText(
                 f"Selected: <b>{student.name_of_the_student}</b> (ID: {student.id_number})"
             )
-            self.lbl_selected_info.setStyleSheet("color: #0F172A; font-size: 13px;")
+            self.lbl_selected_info.setProperty("class", "SelectedStudentActive")
+            polish_widget(self.lbl_selected_info)
             self.btn_action_view.setEnabled(True)
             self.btn_action_edit.setEnabled(True)
             self.btn_action_delete.setEnabled(True)
         else:
             self.selected_student_id = None
             self.lbl_selected_info.setText("No student selected — Click any record or double-click to view dossier")
-            self.lbl_selected_info.setStyleSheet("color: #64748B; font-size: 12px; font-style: italic;")
+            self.lbl_selected_info.setProperty("class", "SelectedStudentInactive")
             self.btn_action_view.setEnabled(False)
             self.btn_action_edit.setEnabled(False)
             self.btn_action_delete.setEnabled(False)
@@ -458,18 +520,18 @@ class StudentsPage(QWidget):
         student = self.student_service.get_student_by_id(student_id)
         if not student:
             return
-            
+
         reply = QMessageBox.question(
-            self, "Confirm Delete Record", 
+            self, "Confirm Delete Record",
             f"Are you sure you want to permanently delete the student records for '{student.name_of_the_student}' (ID: {student.id_number})?\n\nThis action cannot be undone.",
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No
         )
-        
+
         if reply == QMessageBox.Yes:
             if student.photo_path:
                 from services.photo_service import PhotoService
                 PhotoService().delete_photo(student.photo_path)
-                
+
             success = self.student_service.delete_student(student_id)
             if success:
                 QMessageBox.information(self, "Success", "Student record successfully deleted.")

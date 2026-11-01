@@ -9,19 +9,24 @@ ENV/
 
 # PyInstaller / Build outputs & Caches
 build/
+build*/
 build_qa/
 build_onefile/
 dist/
+dist*/
 dist_qa/
 installer_output/
+installer_output*/
 installer_output_qa/
 *.spec.bak
 tmp*/
 
 # Local Distribution & Release Artifacts
 release/
+release*/
 release_qa/
 release_candidate_*/
+release_candidate*/
 
 # Local Application Data, Databases & Media
 *.db
@@ -40,6 +45,9 @@ scratch/
 staging_signed/
 msix_poc/
 qa_artifacts/
+qa_artifacts*/
+qa*/
+qa_*/
 security_reports/
 
 # Local Scan Dumps & Binary Analysis Dumps

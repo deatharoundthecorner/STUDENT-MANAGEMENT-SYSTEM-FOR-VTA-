@@ -35,7 +35,7 @@ def main():
         try:
             import ctypes
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
-                "SMS.StudentManagementSystem.Admin.1.0"
+                "SMS.StudentManagementSystem.Admin.1.1"
             )
         except Exception:
             pass
@@ -53,6 +53,7 @@ def main():
     if icon_path.exists():
         app.setWindowIcon(QIcon(str(icon_path)))
 
+    print(f"[SMS_CONFIG] Active Database Path: {DatabaseManager.get_db_path()}")
     try:
         DatabaseManager().initialize_database()
     except Exception:
