@@ -20,6 +20,7 @@ from services.photo_service import PhotoService
 from models.student import Student
 from ui.student_form_page import StudentFormPage
 from ui.login_window import LoginWindow
+from ui.settings_page import SettingsPage
 
 
 class V111RegressionTestCase(unittest.TestCase):
@@ -288,6 +289,12 @@ class V111RegressionTestCase(unittest.TestCase):
         self.assertEqual(rec2.name_of_the_student, "Second New Record")
         self.assertEqual(rec2.year_of_registered, "2026")
         self.assertEqual(rec2.phone_number, "0777654321")
+
+    # 13. Settings page displays consistent release version v1.1.1
+    def test_13_settings_page_release_version(self):
+        page = SettingsPage()
+        self.assertTrue(hasattr(page, "lbl_release_version"))
+        self.assertEqual(page.lbl_release_version.text(), "1.1.1 (Windows Desktop Native Edition)")
 
 
 if __name__ == "__main__":

@@ -231,7 +231,9 @@ class SettingsPage(QWidget):
         add_info_row("Runtime Engine:", f"Python {sys.version.split()[0]}")
         add_info_row("User Interface Framework:", "PySide6 (Qt 6 for Python)")
         add_info_row("Database Engine:", "SQLite 3 (Local Encrypted/Sanitized Offline Database)")
-        add_info_row("Release Version:", "1.1.0 (Windows Desktop Native Edition)")
+        self.lbl_release_version = QLabel("1.1.1 (Windows Desktop Native Edition)")
+        self.lbl_release_version.setProperty("class", "BodyText")
+        meta_layout.addRow("Release Version:", self.lbl_release_version)
 
         content_layout.addWidget(meta_group)
 
