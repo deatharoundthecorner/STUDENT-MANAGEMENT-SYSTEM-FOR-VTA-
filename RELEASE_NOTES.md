@@ -3,9 +3,14 @@
 ## 🛠️ Release Notes v1.1.1 (Maintenance & Quality Release)
 
 **Release Version:** v1.1.1 (Maintenance Candidate)<br>
+**Installer File:** `StudentManagementSystem_Setup_v1.1.1.exe`<br>
+**Installer File Size:** 69,224,300 bytes (~66.02 MB)<br>
+**SHA-256 Checksum:** `A7152153341A1F383D56A5F96282E158B09626BA0CA7DD40AFCEC06B7DC3A344`<br>
+**Release Asset Path:** `release_candidate_v1.1.1_phase50\StudentManagementSystem_Setup_v1.1.1.exe`<br>
 **Target Platform:** Microsoft Windows 10 / Windows 11 (64-bit)<br>
 **Release Type:** Maintenance, Usability & Storage Security Update<br>
-**Database Compatibility:** 100% backward compatible with v1.1.0 and v1.0.1 databases
+**Database Compatibility:** 100% backward compatible with v1.1.0 and v1.0.1 databases<br>
+**Publishing Status:** Staged Release Candidate (Verification Passed — Not Yet Published)
 
 ---
 
@@ -36,8 +41,22 @@ Student Management System v1.1.1 introduces user-facing workflow refinements in 
 - **Preservation on Reinstallation:** Reaffirmed that application reinstalls or updates leave the `%LOCALAPPDATA%` data directory intact.
 
 #### 4. Automated Regression Test Suite
-- Added permanent automated regression tests (`tests/test_v111_regression.py`) covering storage isolation, logging redaction, first-run wizard detection, password security, ADD/EDIT mode transitions, unsaved change prompts, duplicate ID rejection, and record immutability.
-- All 42 unit and regression tests pass with 0 failures and 0 errors.
+- Added permanent automated regression tests (`tests/test_v111_regression.py`) covering storage isolation, logging redaction, first-run wizard detection, password security, ADD/EDIT mode transitions, unsaved change prompts, duplicate ID rejection, record immutability, and System Information release version consistency.
+- All 43 unit and regression tests pass with 0 failures and 0 errors.
+
+---
+
+### 🔒 Verification & Checksum Manifest (v1.1.1 Candidate)
+
+| File Name | File Size (Bytes) | SHA-256 Digest |
+| :--- | :---: | :--- |
+| `StudentManagementSystem_Setup_v1.1.1.exe` | **69,224,300** | `A7152153341A1F383D56A5F96282E158B09626BA0CA7DD40AFCEC06B7DC3A344` |
+| `SHA256SUMS.txt` | **107** | `SHA-256 manifest file` |
+
+Verify candidate via Windows PowerShell:
+```powershell
+Get-FileHash .\release_candidate_v1.1.1_phase50\StudentManagementSystem_Setup_v1.1.1.exe -Algorithm SHA256
+```
 
 ---
 
